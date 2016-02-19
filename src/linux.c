@@ -22,7 +22,6 @@
 #include <inttypes.h>
 #include <limits.h>
 #include <linux/ethtool.h>
-#include <linux/nvme.h>
 #include <linux/sockios.h>
 #include <net/if.h>
 #include <scsi/scsi.h>
@@ -40,6 +39,10 @@
 #include "dp.h"
 #include "linux.h"
 #include "util.h"
+
+#ifndef NVME_IOCTL_ID
+#define NVME_IOCTL_ID _IO('N', 0x40)
+#endif
 
 int
 __attribute__((__visibility__ ("hidden")))
