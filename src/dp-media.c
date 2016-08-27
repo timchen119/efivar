@@ -193,7 +193,7 @@ efidp_make_hd(uint8_t *buf, ssize_t size, uint32_t num, uint64_t part_start,
 		hd->signature_type = signature_type;
 	}
 	
-	syslog(LOG_CRIT,"efidp_make_hd: buf:%s, size:%d, num:%d, part_start:%d, part_size:%d, signature: %s, format: %d, signarture_type: %d ", buf, size, num, part_start,part_size,signature,format,signature_type);
+	syslog(LOG_CRIT,"efidp_make_hd: buf:%s, size:%zd, num:%d, part_start:%" PRIu64 ", part_size:%" PRIu64 ", signature: %s, format: %d, signarture_type: %d ", buf, size, num, part_start,part_size,signature,format,signature_type);
 
 	if (sz < 0)
 		efi_error("efidp_make_generic failed");
