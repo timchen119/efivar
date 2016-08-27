@@ -1016,12 +1016,14 @@ eb_disk_info_from_sysfs(struct disk_info *info, const char * const partition_pat
 	info->pci_root.root_pci_domain = 0xffff;
 	info->pci_root.root_pci_bus = 0xff;
 	
-	rc = sysfs_readlink(&devnumbuf, "/sys/class/block/%s/dev", partition_path);
+	syslog(LOG_CRIT,"AA partition path: %s, devnumbuf:%" PRIu64 ":%c", partition_path, info->major, info->minor);
+	
+	rc = read_sysfs_file(&devnumbuf, "/sys/class/block/%s/dev", partition_path);
         if (rc < 0)
                 return -1;
 
 	sscanf(devnumbuf,"%" PRIu64 ":%c" , &info->major, &info->minor);
-                
+	syslog(LOG_CRIT,"partition path: %s, devnumbuf:%" PRIu64 ":%c", partition_path, info->major, info->minor);
 
 	/* IDE disks can have up to 64 partitions, or 6 bits worth,
 	 * and have one bit for the disk number.
