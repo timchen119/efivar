@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
+#include <syslog.h>
 
 #include <efivar.h>
 #include <efiboot.h>
@@ -309,6 +310,8 @@ efi_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	int saved_errno;
 	va_list ap;
 
+	syslog(LOG_CRIT,"efi_generate_file_device_path_from_esp 1");
+
 	va_start(ap, options);
 	ret = efi_va_generate_file_device_path_from_esp(buf, size, devpath,
 							partition, relpath,
@@ -316,6 +319,8 @@ efi_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	saved_errno = errno;
 	va_end(ap);
 	errno = saved_errno;
+	
+	syslog(LOG_CRIT,"efi_generate_file_device_path_from_esp 2");
 	if (ret < 0)
 		efi_error("could not generate File DP from ESP");
 	return ret;
@@ -335,25 +340,34 @@ efi_generate_file_device_path(uint8_t *buf, ssize_t size,
 	char *relpath = NULL;
 	va_list ap;
 	int saved_errno;
+	
+	syslog(LOG_CRIT,"efi_generate_file_device_path 1");
 
 	rc = find_file(filepath, &child_devpath, &relpath);
 	if (rc < 0) {
 		efi_error("could not canonicalize fs path");
+		syslog(LOG_CRIT,"efi_generate_file_device_path 2");
 		return -1;
 	}
 
 	rc = find_parent_devpath(child_devpath, &parent_devpath);
 	if (rc < 0) {
 		efi_error("could not find parent device for file");
+		syslog(LOG_CRIT,"efi_generate_file_device_path 3");
 		return -1;
 	}
+
+	syslog(LOG_CRIT,"efi_generate_file_device_path 4");
 
 	rc = get_partition_number(child_devpath);
 	if (rc < 0) {
 		efi_error("could not get partition number for device");
+		syslog(LOG_CRIT,"efi_generate_file_device_path 4");
 		goto err;
 	}
-
+	
+	syslog(LOG_CRIT,"efi_generate_file_device_path 5");
+	
 	va_start(ap, options);
 
 	ret = efi_va_generate_file_device_path_from_esp(buf, size,
@@ -362,6 +376,7 @@ efi_generate_file_device_path(uint8_t *buf, ssize_t size,
 	saved_errno = errno;
 	va_end(ap);
 	errno = saved_errno;
+	syslog(LOG_CRIT,"efi_generate_file_device_path 6");
 	if (ret < 0)
 		efi_error("could not generate File DP from ESP");
 err:
