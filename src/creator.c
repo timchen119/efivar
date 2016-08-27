@@ -56,7 +56,7 @@ find_file(const char * const filepath, char **devicep, char **relpathp)
 	linklen = strlen(filepath);
 	if (linklen > PATH_MAX) {
 		errno = ENAMETOOLONG;
-		syslog(LOG_CRIT,("filepath length exceeds PATH_MAX");
+		syslog(LOG_CRIT,"filepath length exceeds PATH_MAX");
 		return -1;
 	}
 	strcpy(linkbuf, filepath);
