@@ -152,6 +152,8 @@ open_disk(struct disk_info *info, int flags)
 {
 	char *diskpath = NULL;
 	int rc;
+	
+	syslog(LOG_CRIT,"open_disk /dev/%s", info->disk_name);
 
 	rc = asprintfa(&diskpath, "/dev/%s", info->disk_name);
 	if (rc < 0) {
@@ -187,12 +189,17 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	struct disk_info info = { 0, };
 	int fd = -1;
 	int saved_errno;
+	
+	syslog(LOG_CRIT,"efi_va_generate_file_device_path_from_esp 0");
+
 
 	fd = open(devpath, O_RDONLY);
 	if (fd < 0) {
 		syslog(LOG_CRIT,"could not open device for ESP");
 		goto err;
 	}
+	
+	syslog(LOG_CRIT,"efi_va_generate_file_device_path_from_esp 1");
 
 	rc = eb_disk_info_from_fd(fd, &info);
 	if (rc < 0 && errno != ENOSYS) {
@@ -200,10 +207,13 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 		goto err;
 	}
 
+	syslog(LOG_CRIT,"efi_va_generate_file_device_path_from_esp 2");
+
 	if (partition > 0)
 		info.part = partition;
 
 	if (options & EFIBOOT_ABBREV_EDD10) {
+		syslog(LOG_CRIT,"efi_va_generate_file_device_path_from_esp A");
 		va_list aq;
 		va_copy(aq, ap);
 
@@ -215,6 +225,7 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	if ((options & EFIBOOT_ABBREV_EDD10)
 			&& (!(options & EFIBOOT_ABBREV_FILE)
 			    && !(options & EFIBOOT_ABBREV_HD))) {
+		syslog(LOG_CRIT,"efi_va_generate_file_device_path_from_esp B");
 		sz = efidp_make_edd10(buf, size, info.edd10_devicenum);
 		if (sz < 0) {
 			syslog(LOG_CRIT,"could not make EDD 1.0 device path");
@@ -223,6 +234,7 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 		off = sz;
 	} else if (!(options & EFIBOOT_ABBREV_FILE)
 		   && !(options & EFIBOOT_ABBREV_HD)) {
+		syslog(LOG_CRIT,"efi_va_generate_file_device_path_from_esp C");
 		/*
 		 * We're probably on a modern kernel, so just parse the
 		 * symlink from /sys/dev/block/$major:$minor and get it
@@ -240,6 +252,8 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 		int disk_fd;
 		int saved_errno;
 		int rc;
+		
+		syslog(LOG_CRIT,"efi_va_generate_file_device_path_from_esp D");
 
 		rc = set_disk_and_part_name(&info);
 		if (rc < 0) {
@@ -265,6 +279,8 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 		}
 		off += sz;
 	}
+	
+	syslog(LOG_CRIT,"efi_va_generate_file_device_path_from_esp 8");
 
 	char *filepath = strdupa(relpath);
 	tilt_slashes(filepath);
@@ -274,6 +290,8 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 		goto err;
 	}
 	off += sz;
+	
+	syslog(LOG_CRIT,"efi_va_generate_file_device_path_from_esp 9");
 
 	sz = efidp_make_end_entire(buf+off, size?size-off:0);
 	if (sz < 0) {
