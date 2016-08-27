@@ -1006,6 +1006,98 @@ eb_disk_info_from_fd(int fd, struct disk_info *info)
 
 int
 __attribute__((__visibility__ ("hidden")))
+eb_disk_info_from_path(const char *devpath, struct disk_info *info)
+{
+        struct stat statbuf = { 0, };
+        int rc;
+
+	memset(info, 0, sizeof *info);
+
+	info->pci_root.root_pci_domain = 0xffff;
+	info->pci_root.root_pci_bus = 0xff;
+
+        rc = stat(devpath, &statbuf);
+        if (rc < 0)
+                return -1;
+
+        if (!S_ISBLK(statbuf.st_mode)) {
+                errno = EINVAL;
+                return -1;
+        }
+
+        info->major = major(statbuf.st_rdev);
+        info->minor = minor(statbuf.st_rdev);
+
+	/* IDE disks can have up to 64 partitions, or 6 bits worth,
+	 * and have one bit for the disk number.
+	 * This leaves an extra bit at the top.
+	 */
+	if (info->major == 3) {
+		info->disknum = (info->minor >> 6) & 1;
+		info->controllernum = (info->major - 3 + 0) + info->disknum;
+		info->interface_type = ata;
+		info->part    = info->minor & 0x3F;
+		return 0;
+	} else if (info->major == 22) {
+		info->disknum = (info->minor >> 6) & 1;
+		info->controllernum = (info->major - 22 + 2) + info->disknum;
+		info->interface_type = ata;
+		info->part    = info->minor & 0x3F;
+		return 0;
+	} else if (info->major >= 33 && info->major <= 34) {
+		info->disknum = (info->minor >> 6) & 1;
+		info->controllernum = (info->major - 33 + 4) + info->disknum;
+		info->interface_type = ata;
+		info->part    = info->minor & 0x3F;
+		return 0;
+	} else if (info->major >= 56 && info->major <= 57) {
+		info->disknum = (info->minor >> 6) & 1;
+		info->controllernum = (info->major - 56 + 8) + info->disknum;
+		info->interface_type = ata;
+		info->part    = info->minor & 0x3F;
+		return 0;
+	} else if (info->major >= 88 && info->major <= 91) {
+		info->disknum = (info->minor >> 6) & 1;
+		info->controllernum = (info->major - 88 + 12) + info->disknum;
+		info->interface_type = ata;
+		info->part    = info->minor & 0x3F;
+		return 0;
+	}
+
+        /* I2O disks can have up to 16 partitions, or 4 bits worth. */
+	if (info->major >= 80 && info->major <= 87) {
+		info->interface_type = i2o;
+		info->disknum = 16*(info->major-80) + (info->minor >> 4);
+		info->part    = (info->minor & 0xF);
+		return 0;
+	}
+
+	/* SCSI disks can have up to 16 partitions, or 4 bits worth
+	 * and have one bit for the disk number.
+	 */
+	if (info->major == 8) {
+		info->interface_type = scsi;
+		info->disknum = (info->minor >> 4);
+		info->part    = (info->minor & 0xF);
+		return 0;
+	} else  if (info->major >= 65 && info->major <= 71) {
+		info->interface_type = scsi;
+		info->disknum = 16*(info->major-64) + (info->minor >> 4);
+		info->part    = (info->minor & 0xF);
+		return 0;
+	} else  if (info->major >= 128 && info->major <= 135) {
+		info->interface_type = scsi;
+		info->disknum = 16*(info->major-128) + (info->minor >> 4);
+		info->part    = (info->minor & 0xF);
+		return 0;
+	}
+
+	errno = ENOSYS;
+	return -1;
+}
+
+int
+__attribute__((__visibility__ ("hidden")))
 eb_disk_info_from_sysfs(struct disk_info *info, const char * const partition_path)
 {
 	char *devnumbuf = NULL;

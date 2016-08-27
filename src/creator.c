@@ -192,7 +192,7 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	
 	syslog(LOG_CRIT,"efi_va_generate_file_device_path_from_esp 0: devpath: %s,relpath:%s, sysfsfile:%s", devpath,relpath, strrchr(devpath,'/'));
 	
-	rc = eb_disk_info_from_sysfs(&info, strrchr(devpath,'/'));
+	rc = eb_disk_info_from_path(devpath, &info);
 
 	/*
 	fd = open(devpath, O_RDONLY);
@@ -400,7 +400,7 @@ efi_generate_file_device_path(uint8_t *buf, ssize_t size,
 	va_start(ap, options);
 
 	ret = efi_va_generate_file_device_path_from_esp(buf, size,
-							parent_devpath, rc,
+							child_devpath, rc,
 							relpath, options, ap);
 	saved_errno = errno;
 	va_end(ap);
