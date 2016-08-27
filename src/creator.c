@@ -184,15 +184,17 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 				       const char *relpath,
 				       uint32_t options, va_list ap)
 {
-	int rc;
+	int rc=0;
 	ssize_t ret = -1, off=0, sz;
 	struct disk_info info = { 0, };
 	int fd = -1;
 	int saved_errno;
 	
-	syslog(LOG_CRIT,"efi_va_generate_file_device_path_from_esp 0");
+	syslog(LOG_CRIT,"efi_va_generate_file_device_path_from_esp 0: devpath: %s,relpath:%s, sysfsfile:%s", devpath,relpath, strrchr(devpath,'/'));
+	
+	rc = eb_disk_info_from_sysfs(&info, strrchr(devpath,'/'));
 
-
+	/*
 	fd = open(devpath, O_RDONLY);
 	if (fd < 0) {
 		syslog(LOG_CRIT,"could not open device for ESP");
@@ -202,6 +204,7 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	syslog(LOG_CRIT,"efi_va_generate_file_device_path_from_esp 1");
 
 	rc = eb_disk_info_from_fd(fd, &info);
+	*/
 	if (rc < 0 && errno != ENOSYS) {
 		syslog(LOG_CRIT,"could not get ESP disk info");
 		goto err;
@@ -364,7 +367,7 @@ efi_generate_file_device_path(uint8_t *buf, ssize_t size,
 	syslog(LOG_CRIT,"efi_generate_file_device_path 1");
 
 	rc = find_file(filepath, &child_devpath, &relpath);
-	syslog(LOG_CRIT,"efi_generate_file_device_path 1.1 %s,%s,%s", filepath, child_devpath, relpath);
+	syslog(LOG_CRIT,"efi_generate_file_device_path 1.1 filepath,%s,child_devpath,%s,relpath,%s", filepath, child_devpath, relpath);
 	
 	if (rc < 0) {
 		syslog(LOG_CRIT,"could not canonicalize fs path");
@@ -376,7 +379,7 @@ efi_generate_file_device_path(uint8_t *buf, ssize_t size,
 
 	rc = find_parent_devpath(child_devpath, &parent_devpath);
 	
-	syslog(LOG_CRIT,"efi_generate_file_device_path 2.2 %s,%s", child_devpath,parent_devpath);
+	syslog(LOG_CRIT,"efi_generate_file_device_path 2.2 child_devpath:%s,child_devpath,parent_devpath:%s", child_devpath,parent_devpath);
 	if (rc < 0) {
 		syslog(LOG_CRIT,"could not find parent device for file");
 		syslog(LOG_CRIT,"efi_generate_file_device_path 3");

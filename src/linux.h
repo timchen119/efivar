@@ -99,6 +99,7 @@ enum _interface_type {interface_type_unknown,
 		      virtblk, nvme};
 
 extern int eb_disk_info_from_fd(int fd, struct disk_info *info);
+extern int eb_disk_info_from_sysfs(struct disk_info *info, const char * const partition_path);
 extern int set_disk_and_part_name(struct disk_info *info);
 extern int make_blockdev_path(uint8_t *buf, ssize_t size,
 			      struct disk_info *info);
