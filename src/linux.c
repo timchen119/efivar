@@ -36,6 +36,7 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <syslog.h>
 
 #ifndef major
 #include <sys/sysmacros.h>
@@ -165,17 +166,23 @@ find_parent_devpath(const char * const child, char **parent)
 	int ret;
 	char *node;
 	char *linkbuf;
+	
+	syslog(LOG_CRIT,"find_parent_devpath 1");
 
 	/* strip leading /dev/ */
 	node = strrchr(child, '/');
 	if (!node)
 		return -1;
 	node++;
+	
+	syslog(LOG_CRIT,"find_parent_devpath 2");
 
 	/* look up full path symlink */
 	ret = sysfs_readlink(&linkbuf, "/sys/class/block/%s", node);
 	if (ret < 0)
 		return ret;
+
+	syslog(LOG_CRIT,"find_parent_devpath 3");
 
 	/* strip child */
 	node = strrchr(linkbuf, '/');
@@ -183,17 +190,23 @@ find_parent_devpath(const char * const child, char **parent)
 		return -1;
 	*node = '\0';
 
+	syslog(LOG_CRIT,"find_parent_devpath 4");
+
 	/* read parent */
 	node = strrchr(linkbuf, '/');
 	if (!node)
 		return -1;
 	*node = '\0';
 	node++;
+	
+	syslog(LOG_CRIT,"find_parent_devpath 5");
 
 	/* write out new path */
 	ret = asprintf(parent, "/dev/%s", node);
 	if (ret < 0)
 		return ret;
+
+	syslog(LOG_CRIT,"find_parent_devpath 6");
 
 	return 0;
 }
