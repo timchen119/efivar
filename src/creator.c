@@ -144,25 +144,6 @@ err:
 	return ret;
 }
 
-static int
-open_disk(struct disk_info *info, int flags)
-{
-	char *diskpath = NULL;
-	int rc;
-
-	rc = asprintfa(&diskpath, "/dev/%s", info->disk_name);
-	if (rc < 0) {
-		efi_error("could not allocate buffer");
-		return -1;
-	}
-
-	rc = open(diskpath, flags);
-	if (rc < 0)
-		efi_error("could not open disk");
-
-	return rc;
-}
-
 static char *
 tilt_slashes(char *s)
 {
@@ -185,13 +166,7 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	int fd = -1;
 	int saved_errno;
 
-	fd = open(devpath, O_RDONLY);
-	if (fd < 0) {
-		efi_error("could not open device for ESP");
-		goto err;
-	}
-
-	rc = eb_disk_info_from_fd(fd, &info);
+	rc = eb_disk_info_from_path(devpath, &info);
 	if (rc < 0 && errno != ENOSYS) {
 		efi_error("could not get ESP disk info");
 		goto err;
@@ -234,7 +209,6 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	}
 
 	if (!(options & EFIBOOT_ABBREV_FILE)) {
-		int disk_fd;
 		int saved_errno;
 		int rc;
 
@@ -244,17 +218,8 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 			goto err;
 		}
 
-		disk_fd = open_disk(&info,
-				    (options & EFIBOOT_OPTIONS_WRITE_SIGNATURE)
-				     ? O_RDWR : O_RDONLY);
-		if (disk_fd < 0) {
-			efi_error("could not open disk");
-			goto err;
-		}
-
-		sz = make_hd_dn(buf, size, off, disk_fd, info.part, options);
+		sz = make_hd_dn_udev(buf, size, off, devpath, info.part, options);
 		saved_errno = errno;
-		close(disk_fd);
 		errno = saved_errno;
 		if (sz < 0) {
 			efi_error("could not make HD() DP node");
@@ -357,7 +322,7 @@ efi_generate_file_device_path(uint8_t *buf, ssize_t size,
 	va_start(ap, options);
 
 	ret = efi_va_generate_file_device_path_from_esp(buf, size,
-							parent_devpath, rc,
+							child_devpath, rc,
 							relpath, options, ap);
 	saved_errno = errno;
 	va_end(ap);

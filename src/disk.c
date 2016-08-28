@@ -276,3 +276,58 @@ _make_hd_dn(uint8_t *buf, ssize_t size, int fd, uint32_t partition,
 		efi_error("could not make HD DP node");
 	return rc;
 }
+
+static int
+get_partition_info_gpt_udev(const char *devpath, uint32_t options,
+		   uint32_t part, uint64_t *start, uint64_t *size,
+		   uint8_t *signature, uint8_t *mbr_type,
+		   uint8_t *signature_type)
+{
+	int gpt_invalid=0;
+	int rc=0;
+
+	gpt_invalid = gpt_disk_get_partition_info_udev(devpath, part,
+						  start, size,
+						  signature,
+						  mbr_type,
+						  signature_type,
+			(options & EFIBOOT_OPTIONS_IGNORE_PMBR_ERR)?1:0);
+
+	if (gpt_invalid) {
+			efi_error("invalid GPT");
+			rc=1;
+	}
+
+	return rc;
+}
+
+
+ssize_t
+__attribute__((__visibility__ ("hidden")))
+_make_hd_dn_udev(uint8_t *buf, ssize_t size, const char* devpath, uint32_t partition,
+	    uint32_t options)
+{
+	uint64_t part_start=0, part_size = 0;
+	uint8_t signature[16]="", format=0, signature_type=0;
+	int rc;
+
+	char *report=getenv("LIBEFIBOOT_REPORT_GPT_ERRORS");
+	if (report)
+		report_errors = 1;
+	errno = 0;
+
+	rc = get_partition_info_gpt_udev(devpath, options,
+				partition > 0 ? partition : 1, &part_start,
+				&part_size, signature, &format,
+				&signature_type);
+	if (rc < 0) {
+		efi_error("could not get partition info");
+		return rc;
+	}
+
+	rc = efidp_make_hd(buf, size, partition>0?partition:1, part_start,
+			   part_size, signature, format, signature_type);
+	if (rc < 0)
+		efi_error("could not make HD DP node");
+	return rc;
+}
