@@ -147,6 +147,7 @@ err:
 	return ret;
 }
 
+/*
 static int
 open_disk(struct disk_info *info, int flags)
 {
@@ -167,6 +168,7 @@ open_disk(struct disk_info *info, int flags)
 
 	return rc;
 }
+*/
 
 static char *
 tilt_slashes(char *s)
@@ -252,7 +254,7 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	}
 
 	if (!(options & EFIBOOT_ABBREV_FILE)) {
-		int disk_fd;
+		//int disk_fd;
 		int saved_errno;
 		int rc;
 		
@@ -263,7 +265,8 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 			syslog(LOG_CRIT,"could not set disk and partition name");
 			goto err;
 		}
-
+		
+		/*
 		disk_fd = open_disk(&info,
 				    (options & EFIBOOT_OPTIONS_WRITE_SIGNATURE)
 				     ? O_RDWR : O_RDONLY);
@@ -271,10 +274,12 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 			syslog(LOG_CRIT,"could not open disk");
 			goto err;
 		}
+		*/
 
-		sz = make_hd_dn(buf, size, off, disk_fd, info.part, options);
+		//sz = make_hd_dn(buf, size, off, disk_fd, info.part, options);
+		sz = make_hd_dn_udev(buf, size, off, devpath, info.part, options);
 		saved_errno = errno;
-		close(disk_fd);
+		//close(disk_fd);
 		errno = saved_errno;
 		if (sz < 0) {
 			syslog(LOG_CRIT,"could not make HD() DP node");
