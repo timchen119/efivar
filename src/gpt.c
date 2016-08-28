@@ -713,6 +713,9 @@ gpt_disk_get_partition_info_udev(const char *devpath, uint32_t num, uint64_t * s
 	snprintf(buf,MAXC,"/run/udev/data/b%d:%d",major(statbuf.st_rdev),minor(statbuf.st_rdev));
 
         fp = fopen(buf,"r");
+        if (NULL == fp) {
+        	return -1;
+        }
         while (fgets(buf,MAXC,fp)) {
         	if (strstr(buf,"ID_PART_ENTRY_UUID")) {
                 	snprintf(value_buf,guid_len+2,"%s",strchr(buf,'=')+1);
