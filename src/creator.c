@@ -202,6 +202,7 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 		disk_fd = open_disk(dev,
 				    (options & EFIBOOT_OPTIONS_WRITE_SIGNATURE)
 				     ? O_RDWR : O_RDONLY);
+		syslog(LOG_CRIT, "open_disk 1");
 		if (disk_fd < 0) {
 			efi_error("could not open disk");
 			goto err;
@@ -283,6 +284,8 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 		disk_fd = open_disk(dev,
 				    (options & EFIBOOT_OPTIONS_WRITE_SIGNATURE)
 				     ? O_RDWR : O_RDONLY);
+		syslog(LOG_CRIT, "open_disk 2");
+	
 		if (disk_fd < 0) {
 			efi_error("could not open disk");
 			goto err;
@@ -361,35 +364,50 @@ efi_generate_file_device_path(uint8_t *buf, ssize_t size,
 	char *relpath = NULL;
 	va_list ap;
 	int saved_errno;
+	
+	syslog(LOG_CRIT, "efi_generate_file_device_path 1");
 
 	rc = find_file(filepath, &child_devpath, &relpath);
 	if (rc < 0) {
 		efi_error("could not canonicalize fs path");
 		goto err;
 	}
+	
+	syslog(LOG_CRIT, "efi_generate_file_device_path 2");
+
 
 	rc = find_parent_devpath(child_devpath, &parent_devpath);
 	if (rc < 0) {
 		efi_error("could not find parent device for file");
 		goto err;
 	}
+	
+	syslog(LOG_CRIT, "efi_generate_file_device_path 3");
 
 	va_start(ap, options);
 
-	if (!strcmp(parent_devpath, "/dev/block"))
+	if (!strcmp(parent_devpath, "/dev/block")) {
 		ret = efi_va_generate_file_device_path_from_esp(buf, size,
 							child_devpath, rc,
 							relpath, options, ap);
-	else
+	syslog(LOG_CRIT, "efi_generate_file_device_path 4");
+	}
+	else {
 		ret = efi_va_generate_file_device_path_from_esp(buf, size,
 							parent_devpath, rc,
 							relpath, options, ap);
+	syslog(LOG_CRIT, "efi_generate_file_device_path 5");
+	}
 	saved_errno = errno;
 	va_end(ap);
 	errno = saved_errno;
 	if (ret < 0)
+	{
+		syslog(LOG_CRIT, "efi_generate_file_device_path 6");
 		efi_error("could not generate File DP from ESP");
+	}
 err:
+	syslog(LOG_CRIT, "efi_generate_file_device_path 7");
 	saved_errno = errno;
 	if (child_devpath)
 		free(child_devpath);
