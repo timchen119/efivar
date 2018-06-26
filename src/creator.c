@@ -179,11 +179,12 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	int fd = -1;
 	int saved_errno;
 
-	debug(DEBUG, "partition:%d", partition);
+	syslog(LOG_CRIT, "partition:%d", partition);
 
 	if (buf && size)
 		memset(buf, '\0', size);
 
+	syslog(LOG_CRIT, "devpath:%s", devpath);
 	fd = open(devpath, O_RDONLY);
 	if (fd < 0) {
 		syslog(LOG_CRIT,"could not open device for ESP");
@@ -367,13 +368,15 @@ efi_generate_file_device_path(uint8_t *buf, ssize_t size,
 	int saved_errno;
 	
 	syslog(LOG_CRIT, "efi_generate_file_device_path 1");
-	syslog(LOG_CRIT, "filepath:%s,child_dev_path:%s,parent_devpath:%s", filepath,child_devpath,relpath);
+	syslog(LOG_CRIT, "1 filepath:%s,child_dev_path:%s,parent_devpath:%s,relpath:%s", filepath,child_devpath,parent_devpath,relpath);
 
 	rc = find_file(filepath, &child_devpath, &relpath);
 	if (rc < 0) {
 		syslog(LOG_CRIT,"could not canonicalize fs path");
 		goto err;
 	}
+	
+	syslog(LOG_CRIT, "2 filepath:%s,child_dev_path:%s,parent_devpath:%s,relpath:%s", filepath,child_devpath,parent_devpath,relpath);
 	
 	syslog(LOG_CRIT, "efi_generate_file_device_path 2");
 
@@ -383,6 +386,8 @@ efi_generate_file_device_path(uint8_t *buf, ssize_t size,
 		syslog(LOG_CRIT,"could not find parent device for file");
 		goto err;
 	}
+	
+	syslog(LOG_CRIT, "3 filepath:%s,child_dev_path:%s,parent_devpath:%s,relpath:%s", filepath,child_devpath,parent_devpath,relpath);
 	
 	syslog(LOG_CRIT, "efi_generate_file_device_path 3");
 
@@ -408,6 +413,7 @@ efi_generate_file_device_path(uint8_t *buf, ssize_t size,
 		syslog(LOG_CRIT, "efi_generate_file_device_path 6");
 		syslog(LOG_CRIT,"could not generate File DP from ESP");
 	}
+	syslog(LOG_CRIT, "4 filepath:%s,child_dev_path:%s,parent_devpath:%s,relpath:%s", filepath,child_devpath,parent_devpath,relpath);	
 err:
 	syslog(LOG_CRIT, "efi_generate_file_device_path 7");
 	saved_errno = errno;
