@@ -254,6 +254,7 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	if ((options & EFIBOOT_ABBREV_EDD10)
 			&& (!(options & EFIBOOT_ABBREV_FILE)
 			    && !(options & EFIBOOT_ABBREV_HD))) {
+		syslog(LOG_CRIT,"test1");
 		sz = efidp_make_edd10(buf, size, dev->edd10_devicenum);
 		if (sz < 0) {
 			syslog(LOG_CRIT,"could not make EDD 1.0 device path");
@@ -268,6 +269,7 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 		 * symlink from /sys/dev/block/$major:$minor and get it
 		 * from there.
 		 */
+		syslog(LOG_CRIT,"test2");
 		sz = make_blockdev_path(buf, size, dev);
 		if (sz < 0) {
 			syslog(LOG_CRIT,"could not create device path");
@@ -280,6 +282,8 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	    ((options & EFIBOOT_ABBREV_HD) && ! dev->part_name)) {
 		int disk_fd;
 		int saved_errno;
+		
+		syslog(LOG_CRIT, "test3");
 
 		disk_fd = open_disk(dev,
 				    (options & EFIBOOT_OPTIONS_WRITE_SIGNATURE)
