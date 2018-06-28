@@ -188,54 +188,52 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	fd = open(devpath, O_RDONLY);
 	if (fd < 0) {
 		syslog(LOG_CRIT,"could not open device for ESP");
-		goto err;
-	}
-
-	dev = device_get(fd, partition);
-	if (dev == NULL) {
-		syslog(LOG_CRIT,"could not get ESP disk info");
-		goto err;
-	}
-
-	if (partition < 0) {
-		int disk_fd;
-
-		debug(DEBUG, "partition: %d", partition);
-		disk_fd = open_disk(dev,
-				    (options & EFIBOOT_OPTIONS_WRITE_SIGNATURE)
-				     ? O_RDWR : O_RDONLY);
-		syslog(LOG_CRIT, "open_disk 1");
-		if (disk_fd < 0) {
-			syslog(LOG_CRIT,"could not open disk");
+	} else {
+		dev = device_get(fd, partition);
+		if (dev == NULL) {
+			syslog(LOG_CRIT,"could not get ESP disk info");
 			goto err;
 		}
+		if (partition < 0) {
+			int disk_fd;
 
-		if (is_partitioned(disk_fd))
-			partition = 1;
-		else
-			partition = 0;
-		debug(DEBUG, "is_partitioned(): partition -> %d", partition);
+			syslog(LOG_CRIT, "partition: %d", partition);
+			disk_fd = open_disk(dev,
+					    (options & EFIBOOT_OPTIONS_WRITE_SIGNATURE)
+					     ? O_RDWR : O_RDONLY);
+			syslog(LOG_CRIT, "open_disk 1");
+			if (disk_fd < 0) {
+				syslog(LOG_CRIT,"could not open disk");
+				goto err;
+			}
 
-		close(disk_fd);
-	}
+			if (is_partitioned(disk_fd))
+				partition = 1;
+			else
+				partition = 0;
+			syslog(LOG_CRIT, "is_partitioned(): partition -> %d", partition);
 
-	set_part(dev, partition);
+			close(disk_fd);
+		}
 
-	if (partition == 0) {
-		options |= EFIBOOT_ABBREV_NONE;
-		options &= ~(EFIBOOT_ABBREV_HD|
-			     EFIBOOT_ABBREV_FILE|
-			     EFIBOOT_ABBREV_EDD10);
+		set_part(dev, partition);
+
+		if (partition == 0) {
+			options |= EFIBOOT_ABBREV_NONE;
+			options &= ~(EFIBOOT_ABBREV_HD|
+				     EFIBOOT_ABBREV_FILE|
+				     EFIBOOT_ABBREV_EDD10);
+		}
 	}
 
 	if (options & EFIBOOT_ABBREV_NONE)
-		debug(DEBUG, "EFIBOOT_ABBREV_NONE");
+		syslog(LOG_CRIT, "EFIBOOT_ABBREV_NONE");
 	if (options & EFIBOOT_ABBREV_HD)
-		debug(DEBUG, "EFIBOOT_ABBREV_HD");
+		syslog(LOG_CRIT, "EFIBOOT_ABBREV_HD");
 	if (options & EFIBOOT_ABBREV_FILE)
-		debug(DEBUG, "EFIBOOT_ABBREV_FILE");
+		syslog(LOG_CRIT, "EFIBOOT_ABBREV_FILE");
 	if (options & EFIBOOT_ABBREV_EDD10)
-		debug(DEBUG, "EFIBOOT_ABBREV_EDD10");
+		syslog(LOG_CRIT, "EFIBOOT_ABBREV_EDD10");
 
 	if (options & EFIBOOT_ABBREV_EDD10) {
 		va_list aq;
@@ -328,7 +326,7 @@ err:
 	if (fd >= 0)
 		close(fd);
 	errno = saved_errno;
-	debug(DEBUG, "= %zd", ret);
+	syslog(LOG_CRIT, "= %zd", ret);
 	return ret;
 }
 
