@@ -278,8 +278,8 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 		off += sz;
 	}
 
-	if ((!(options & EFIBOOT_ABBREV_FILE) && dev->part_name) ||
-	    ((options & EFIBOOT_ABBREV_HD) && ! dev->part_name)) {
+	if ((!(options & EFIBOOT_ABBREV_FILE) && dev && dev->part_name) ||
+	    ((options & EFIBOOT_ABBREV_HD) && dev && ! dev->part_name)) {
 		int disk_fd;
 		int saved_errno;
 		
