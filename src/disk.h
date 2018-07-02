@@ -26,4 +26,6 @@ extern bool HIDDEN is_partitioned(int fd);
 extern HIDDEN ssize_t make_hd_dn(uint8_t *buf, ssize_t size, int fd,
                                  int32_t partition, uint32_t options);
 
+extern HIDDEN ssize_t make_hd_dn_udev(uint8_t *buf, ssize_t size, const char *devpath,
+                                 int32_t partition, uint32_t options);
 #endif /* _EFIBOOT_DISK_H */
