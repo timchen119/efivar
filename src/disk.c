@@ -264,6 +264,7 @@ make_hd_dn(uint8_t *buf, ssize_t size, int fd, int32_t partition,
 	uint8_t signature[16]="", format=0, signature_type=0;
 	int rc;
 
+	options = 0;
 	errno = 0;
 
 	if (partition <= 0)

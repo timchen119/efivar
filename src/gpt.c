@@ -806,8 +806,6 @@ gpt_disk_get_partition_info_udev(const char *devpath, uint32_t num, uint64_t * s
                         rc = text_to_guid(value_buf, &guid);
 
                         if (rc<0) {
-                                if (report_errors)
-                                        fprintf(stderr, "partition %d is not valid\n", num);
                                 errno = EINVAL;
                                 fclose(fp);
                                 return rc;
