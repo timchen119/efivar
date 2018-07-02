@@ -319,6 +319,8 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 		}		
 		off += sz;
 	}
+	
+	syslog(LOG_CRIT, "buf:%s,relpath:%s", buf,relpath);
 
 	char *filepath = strdupa(relpath);
 	tilt_slashes(filepath);
