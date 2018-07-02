@@ -294,6 +294,10 @@ make_hd_dn_udev(uint8_t *buf, ssize_t size, const char *devpath, int32_t partiti
 	uint8_t signature[16]="", format=0, signature_type=0;
 	int rc;
 
+
+	//FIXME
+	options += 1;
+	
 	errno = 0;
 
 	if (partition <= 0)
