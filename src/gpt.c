@@ -779,7 +779,7 @@ gpt_disk_get_partition_info_udev(const char *devpath, uint32_t num, uint64_t * s
 	//FIXME
 	ignore_pmbr_error +=1;
 	logical_block_size +=1;
-	num=+=1;
+	num +=1;
 
 	*mbr_type = 0x02;
 	*signature_type = 0x02;
