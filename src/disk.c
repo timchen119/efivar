@@ -301,7 +301,7 @@ make_hd_dn_udev(uint8_t *buf, ssize_t size, const char *devpath, int32_t partiti
 
 	rc = gpt_disk_get_partition_info_udev(devpath, partition, &part_start,
 				&part_size, signature, &format,
-				&signature_type);
+				&signature_type,0,0);
 	if (rc < 0) {
 		efi_error("could not get partition info");
 		return rc;
