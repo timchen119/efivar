@@ -776,6 +776,10 @@ gpt_disk_get_partition_info_udev(const char *devpath, uint32_t num, uint64_t * s
 {
 	int rc = 0;
 
+	//FIXME
+	ignore_pmbr_error =0;
+	logical_block_size =0;
+
 	*mbr_type = 0x02;
 	*signature_type = 0x02;
 
