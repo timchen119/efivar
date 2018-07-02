@@ -298,7 +298,7 @@ make_hd_dn_udev(uint8_t *buf, ssize_t size, const char *devpath, int32_t partiti
 	if (partition <= 0)
 		return 0;
 
-	rc = gpt_disk_get_partition_info_udev(devpath, options, partition, &part_start,
+	rc = gpt_disk_get_partition_info_udev(devpath, partition, &part_start,
 				&part_size, signature, &format,
 				&signature_type);
 	if (rc < 0) {
