@@ -37,9 +37,14 @@
 #include <unistd.h>
 
 #include "efivar.h"
+#include "guid.h"
 
 #ifndef BLKGETLASTSECT
 #define BLKGETLASTSECT _IO(0x12,108) /* get last sector of block device */
+#endif
+
+#ifndef major
+#include <sys/sysmacros.h>
 #endif
 
 struct blkdev_ioctl_param {
@@ -760,6 +765,75 @@ gpt_disk_get_partition_info(int fd, uint32_t num, uint64_t * start,
 	free(ptes);
 	free(gpt);
 
+	return rc;
+}
+
+int NONNULL(3, 4, 5, 6, 7) HIDDEN
+gpt_disk_get_partition_info_udev(const char *devpath, uint32_t num, uint64_t * start,
+			    uint64_t * size, uint8_t *signature,
+			    uint8_t * mbr_type, uint8_t * signature_type,
+			    int ignore_pmbr_error, int logical_block_size)
+{
+	int rc = 0;
+
+	*mbr_type = 0x02;
+	*signature_type = 0x02;
+
+        FILE* fp;
+        enum { MAXC = 64 };
+        unsigned int guid_len = sizeof("84be9c3e-8a32-42c0-891c-4cd3b072becc");
+        char buf[MAXC];
+        char value_buf[MAXC];
+        struct stat statbuf = { 0, };
+        efi_guid_t guid;
+
+        rc = stat(devpath, &statbuf);
+        if (rc < 0)
+                return -1;
+        if (!S_ISBLK(statbuf.st_mode)) {
+                errno = EINVAL;
+                return -1;
+        }
+        snprintf(buf,MAXC,"/run/udev/data/b%d:%d",major(statbuf.st_rdev),minor(statbuf.st_rdev));
+
+        fp = fopen(buf,"r");
+        if (NULL == fp) {
+                return -1;
+        }
+        while (fgets(buf,MAXC,fp)) {
+                if (strstr(buf,"ID_PART_ENTRY_UUID")) {
+                        snprintf(value_buf,guid_len+2,"%s",strchr(buf,'=')+1);
+                        rc = text_to_guid(value_buf, &guid);
+
+                        if (rc<0) {
+                                if (report_errors)
+                                        fprintf(stderr, "partition %d is not valid\n", num);
+                                errno = EINVAL;
+                                fclose(fp);
+                                return rc;
+                        }
+                        memset(signature,0,16);
+                        memcpy(signature,(uint32_t*) &guid.a, 4);
+                        memcpy(signature+4,(uint16_t*) &guid.b, 2);
+                        memcpy(signature+6,(uint16_t*) &guid.c, 2);
+                        memcpy(signature+8,(uint16_t*) &guid.d, 2);
+                        memcpy(signature+10,(uint8_t*) &guid.e[0], 1);
+                        memcpy(signature+11,(uint8_t*) &guid.e[1], 1);
+                        memcpy(signature+12,(uint8_t*) &guid.e[2], 1);
+                        memcpy(signature+13,(uint8_t*) &guid.e[3], 1);
+                        memcpy(signature+14,(uint8_t*) &guid.e[4], 1);
+                        memcpy(signature+15,(uint8_t*) &guid.e[5], 1);
+                }
+                if (strstr(buf,"ID_PART_ENTRY_OFFSET")) {
+                        snprintf(value_buf,MAXC,"%s",strchr(buf,'=')+1);
+                        *start = atoi(value_buf);
+                }
+                if (strstr(buf,"ID_PART_ENTRY_SIZE")) {
+                        snprintf(value_buf,MAXC,"%s",strchr(buf,'=')+1);
+                        *size = atoi(value_buf);
+                }
+        }
+        fclose(fp);
 	return rc;
 }
 

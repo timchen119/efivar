@@ -274,6 +274,35 @@ make_hd_dn(uint8_t *buf, ssize_t size, int fd, int32_t partition,
 				&signature_type);
 	if (rc < 0) {
 		efi_error("could not get partition info");
+
+		return rc;
+	}
+
+	rc = efidp_make_hd(buf, size, partition, part_start, part_size,
+			   signature, format, signature_type);
+	if (rc < 0)
+		efi_error("could not make HD DP node");
+	return rc;
+}
+
+ssize_t HIDDEN
+make_hd_dn_try_udev(uint8_t *buf, ssize_t size, const char *devpath, int32_t partition,
+           uint32_t options)
+{
+	uint64_t part_start=0, part_size = 0;
+	uint8_t signature[16]="", format=0, signature_type=0;
+	int rc;
+
+	errno = 0;
+
+	if (partition <= 0)
+		return 0;
+
+	rc = get_gpt_partition_info_udev(devpath, options, partition, &part_start,
+				&part_size, signature, &format,
+				&signature_type);
+	if (rc < 0) {
+		efi_error("could not get partition info");
 		return rc;
 	}
 
