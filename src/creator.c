@@ -311,7 +311,7 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	if (fd < 0 && !dev && (options & EFIBOOT_ABBREV_HD)) {
 		syslog(LOG_CRIT, "test4 + dependency udev");
 		
-		sz = make_hd_dn_udev(buf+off, size?size-off:0, partition, devpath, options);
+		sz = make_hd_dn_udev(buf+off, size?size-off:0, devpath, partition, options);
 
 		if (sz < 0) {
 			syslog(LOG_CRIT,"could not make HD() DP node from udev");
