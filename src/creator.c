@@ -185,6 +185,7 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 		memset(buf, '\0', size);
 
 	syslog(LOG_CRIT, "devpath:%s", devpath);
+	syslog(LOG_CRIT, "relpath:%s", relpath);
 	fd = open(devpath, O_RDONLY);
 	if (fd < 0) {
 		syslog(LOG_CRIT,"could not open device for ESP");
@@ -310,7 +311,8 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	if (fd < 0 && !dev && (options & EFIBOOT_ABBREV_HD)) {
 		syslog(LOG_CRIT, "test4 + dependency udev");
 		
-		sz = make_hd_dn_udev(buf+off, size?size-off:0, off, devpath, options);
+		sz = make_hd_dn_udev(buf+off, size?size-off:0, partition, devpath, options);
+
 		if (sz < 0) {
 			syslog(LOG_CRIT,"could not make HD() DP node from udev");
 			goto err;
