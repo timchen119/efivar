@@ -350,7 +350,7 @@ err:
 }
 
 ssize_t NONNULL(3, 5) PUBLIC
-rerate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
+efi_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 				       const char *devpath, int partition,
 				       const char *relpath,
 				       uint32_t options, ...)
@@ -372,7 +372,7 @@ rerate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 }
 
 ssize_t NONNULL(3) PUBLIC
-rerate_file_device_path(uint8_t *buf, ssize_t size,
+efi_generate_file_device_path(uint8_t *buf, ssize_t size,
 			      const char * const filepath,
 			      uint32_t options, ...)
 {
@@ -471,7 +471,7 @@ make_ipv4_path(uint8_t *buf, ssize_t size,
 }
 
 ssize_t NONNULL(3, 4, 5, 6, 7) PUBLIC
-rerate_ipv4_device_path(uint8_t *buf, ssize_t size,
+efi_generate_ipv4_device_path(uint8_t *buf, ssize_t size,
 			      const char * const ifname,
 			      const char * const local_addr,
 			      const char * const remote_addr,
