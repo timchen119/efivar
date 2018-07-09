@@ -48,7 +48,7 @@ find_file(const char * const filepath, char **devicep, char **relpathp)
 	linklen = strlen(filepath);
 	if (linklen > PATH_MAX) {
 		errno = ENAMETOOLONG;
-		syslog(LOG_CRIT,"filepath length exceeds PATH_MAX");
+		syslog(LOG_CRIT,"efivar, creator.c: filepath length exceeds PATH_MAX");
 		return -1;
 	}
 	strcpy(linkbuf, filepath);
@@ -64,7 +64,7 @@ find_file(const char * const filepath, char **devicep, char **relpathp)
 
 			l = readlink(linkbuf, tmp, PATH_MAX);
 			if (l < 0) {
-				syslog(LOG_CRIT,"readlink failed");
+				syslog(LOG_CRIT,"efivar, creator.c: readlink failed");
 				return -1;
 			}
 			tmp[l] = '\0';
@@ -77,7 +77,7 @@ find_file(const char * const filepath, char **devicep, char **relpathp)
 
 	mounts = fopen("/proc/self/mounts", "r");
 	if (mounts == NULL) {
-		syslog(LOG_CRIT,"couldn not open /proc/self/mounts");
+		syslog(LOG_CRIT,"efivar, creator.c: couldn not open /proc/self/mounts");
 		return -1;
 	}
 
@@ -90,7 +90,7 @@ find_file(const char * const filepath, char **devicep, char **relpathp)
 		if (!me) {
 			if (feof(mounts)) {
 				errno = ENOENT;
-				syslog(LOG_CRIT,"could not find mountpoint");
+				syslog(LOG_CRIT,"efivar, creator.c: could not find mountpoint");
 			}
 			goto err;
 		}
@@ -102,7 +102,7 @@ find_file(const char * const filepath, char **devicep, char **relpathp)
 		if (rc < 0) {
 			if (errno == ENOENT)
 				continue;
-			syslog(LOG_CRIT,"could not stat mountpoint");
+			syslog(LOG_CRIT,"efivar, creator.c: could not stat mountpoint");
 			goto err;
 		}
 
@@ -118,7 +118,7 @@ find_file(const char * const filepath, char **devicep, char **relpathp)
 			*devicep = strdup(me->mnt_fsname);
 			if (!*devicep) {
 				errno = ENOMEM;
-				syslog(LOG_CRIT,"strdup failed");
+				syslog(LOG_CRIT,"efivar, creator.c: strdup failed");
 				goto err;
 			}
 			*relpathp = strdup(linkbuf + mntlen);
@@ -126,7 +126,7 @@ find_file(const char * const filepath, char **devicep, char **relpathp)
 				free(*devicep);
 				*devicep = NULL;
 				errno = ENOMEM;
-				syslog(LOG_CRIT,"strdup failed");
+				syslog(LOG_CRIT,"efivar, creator.c: strdup failed");
 				goto err;
 			}
 			ret = 0;
@@ -147,13 +147,13 @@ open_disk(struct device *dev, int flags)
 
 	rc = asprintfa(&diskpath, "/dev/%s", dev->disk_name);
 	if (rc < 0) {
-		syslog(LOG_CRIT,"could not allocate buffer");
+		syslog(LOG_CRIT,"efivar, creator.c: could not allocate buffer");
 		return -1;
 	}
 
 	rc = open(diskpath, flags);
 	if (rc < 0)
-		syslog(LOG_CRIT,"could not open disk");
+		syslog(LOG_CRIT,"efivar, creator.c: could not open disk");
 
 	return rc;
 }
@@ -188,11 +188,11 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	syslog(LOG_CRIT, "relpath:%s", relpath);
 	fd = open(devpath, O_RDONLY);
 	if (fd < 0) {
-		syslog(LOG_CRIT,"could not open device for ESP");
+		syslog(LOG_CRIT,"efivar, creator.c: could not open device for ESP");
 	} else {
 		dev = device_get(fd, partition);
 		if (dev == NULL) {
-			syslog(LOG_CRIT,"could not get ESP disk info");
+			syslog(LOG_CRIT,"efivar, creator.c: could not get ESP disk info");
 			goto err;
 		}
 		if (partition < 0) {
@@ -204,7 +204,7 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 					     ? O_RDWR : O_RDONLY);
 			syslog(LOG_CRIT, "open_disk 1");
 			if (disk_fd < 0) {
-				syslog(LOG_CRIT,"could not open disk");
+				syslog(LOG_CRIT,"efivar, creator.c: could not open disk");
 				goto err;
 			}
 
@@ -248,17 +248,17 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
         if (!(options & (EFIBOOT_ABBREV_FILE|EFIBOOT_ABBREV_HD)) &&
             (dev->flags & DEV_ABBREV_ONLY)) {
                 errno = EINVAL;
-                syslog(LOG_CRIT,"Device must use File() or HD() device path");
+                syslog(LOG_CRIT,"efivar, creator.c: Device must use File() or HD() device path");
                 goto err;
         }
 
 	if ((options & EFIBOOT_ABBREV_EDD10)
 			&& (!(options & EFIBOOT_ABBREV_FILE)
 			    && !(options & EFIBOOT_ABBREV_HD))) {
-		syslog(LOG_CRIT,"test1");
+		syslog(LOG_CRIT,"efivar, creator.c: test1");
 		sz = efidp_make_edd10(buf, size, dev->edd10_devicenum);
 		if (sz < 0) {
-			syslog(LOG_CRIT,"could not make EDD 1.0 device path");
+			syslog(LOG_CRIT,"efivar, creator.c: could not make EDD 1.0 device path");
 			goto err;
 		}
 		off = sz;
@@ -270,10 +270,10 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 		 * symlink from /sys/dev/block/$major:$minor and get it
 		 * from there.
 		 */
-		syslog(LOG_CRIT,"test2");
+		syslog(LOG_CRIT,"efivar, creator.c: test2");
 		sz = make_blockdev_path(buf, size, dev);
 		if (sz < 0) {
-			syslog(LOG_CRIT,"could not create device path");
+			syslog(LOG_CRIT,"efivar, creator.c: could not create device path");
 			goto err;
 		}
 		off += sz;
@@ -292,7 +292,7 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 		syslog(LOG_CRIT, "open_disk 2");
 	
 		if (disk_fd < 0) {
-			syslog(LOG_CRIT,"could not open disk");
+			syslog(LOG_CRIT,"efivar, creator.c: could not open disk");
 			goto err;
 		}
 
@@ -302,7 +302,7 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 		close(disk_fd);
 		errno = saved_errno;
 		if (sz < 0) {
-			syslog(LOG_CRIT,"could not make HD() DP node");
+			syslog(LOG_CRIT,"efivar, creator.c: could not make HD() DP node");
 			goto err;
 		}
 		off += sz;
@@ -314,7 +314,7 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 		sz = make_hd_dn_udev(buf+off, size?size-off:0, devpath, partition, options);
 
 		if (sz < 0) {
-			syslog(LOG_CRIT,"could not make HD() DP node from udev");
+			syslog(LOG_CRIT,"efivar, creator.c: could not make HD() DP node from udev");
 			goto err;
 		}		
 		off += sz;
@@ -326,14 +326,14 @@ efi_va_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	tilt_slashes(filepath);
 	sz = efidp_make_file(buf+off, size?size-off:0, filepath);
 	if (sz < 0) {
-		syslog(LOG_CRIT,"could not make File() DP node");
+		syslog(LOG_CRIT,"efivar, creator.c: could not make File() DP node");
 		goto err;
 	}
 	off += sz;
 
 	sz = efidp_make_end_entire(buf+off, size?size-off:0);
 	if (sz < 0) {
-		syslog(LOG_CRIT,"could not make EndEntire DP node");
+		syslog(LOG_CRIT,"efivar, creator.c: could not make EndEntire DP node");
 		goto err;
 	}
 	off += sz;
@@ -350,7 +350,7 @@ err:
 }
 
 ssize_t NONNULL(3, 5) PUBLIC
-efi_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
+rerate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 				       const char *devpath, int partition,
 				       const char *relpath,
 				       uint32_t options, ...)
@@ -367,12 +367,12 @@ efi_generate_file_device_path_from_esp(uint8_t *buf, ssize_t size,
 	va_end(ap);
 	errno = saved_errno;
 	if (ret < 0)
-		syslog(LOG_CRIT,"could not generate File DP from ESP");
+		syslog(LOG_CRIT,"efivar, creator.c: could not generate File DP from ESP");
 	return ret;
 }
 
 ssize_t NONNULL(3) PUBLIC
-efi_generate_file_device_path(uint8_t *buf, ssize_t size,
+rerate_file_device_path(uint8_t *buf, ssize_t size,
 			      const char * const filepath,
 			      uint32_t options, ...)
 {
@@ -384,29 +384,29 @@ efi_generate_file_device_path(uint8_t *buf, ssize_t size,
 	va_list ap;
 	int saved_errno;
 	
-	syslog(LOG_CRIT, "efi_generate_file_device_path 1");
+	syslog(LOG_CRIT, "rerate_file_device_path 1");
 	syslog(LOG_CRIT, "1 filepath:%s,child_dev_path:%s,parent_devpath:%s,relpath:%s", filepath,child_devpath,parent_devpath,relpath);
 
 	rc = find_file(filepath, &child_devpath, &relpath);
 	if (rc < 0) {
-		syslog(LOG_CRIT,"could not canonicalize fs path");
+		syslog(LOG_CRIT,"efivar, creator.c: could not canonicalize fs path");
 		goto err;
 	}
 	
 	syslog(LOG_CRIT, "2 filepath:%s,child_dev_path:%s,parent_devpath:%s,relpath:%s", filepath,child_devpath,parent_devpath,relpath);
 	
-	syslog(LOG_CRIT, "efi_generate_file_device_path 2");
+	syslog(LOG_CRIT, "rerate_file_device_path 2");
 
 
 	rc = find_parent_devpath(child_devpath, &parent_devpath);
 	if (rc < 0) {
-		syslog(LOG_CRIT,"could not find parent device for file");
+		syslog(LOG_CRIT,"efivar, creator.c: could not find parent device for file");
 		goto err;
 	}
 	
 	syslog(LOG_CRIT, "3 filepath:%s,child_dev_path:%s,parent_devpath:%s,relpath:%s", filepath,child_devpath,parent_devpath,relpath);
 	
-	syslog(LOG_CRIT, "efi_generate_file_device_path 3");
+	syslog(LOG_CRIT, "rerate_file_device_path 3");
 
 	va_start(ap, options);
 
@@ -414,25 +414,25 @@ efi_generate_file_device_path(uint8_t *buf, ssize_t size,
 		ret = efi_va_generate_file_device_path_from_esp(buf, size,
 							child_devpath, rc,
 							relpath, options, ap);
-	syslog(LOG_CRIT, "efi_generate_file_device_path 4");
+	syslog(LOG_CRIT, "rerate_file_device_path 4");
 	}
 	else {
 		ret = efi_va_generate_file_device_path_from_esp(buf, size,
 							parent_devpath, rc,
 							relpath, options, ap);
-	syslog(LOG_CRIT, "efi_generate_file_device_path 5");
+	syslog(LOG_CRIT, "rerate_file_device_path 5");
 	}
 	saved_errno = errno;
 	va_end(ap);
 	errno = saved_errno;
 	if (ret < 0)
 	{
-		syslog(LOG_CRIT, "efi_generate_file_device_path 6");
-		syslog(LOG_CRIT,"could not generate File DP from ESP");
+		syslog(LOG_CRIT, "rerate_file_device_path 6");
+		syslog(LOG_CRIT,"efivar, creator.c: could not generate File DP from ESP");
 	}
 	syslog(LOG_CRIT, "4 filepath:%s,child_dev_path:%s,parent_devpath:%s,relpath:%s", filepath,child_devpath,parent_devpath,relpath);	
 err:
-	syslog(LOG_CRIT, "efi_generate_file_device_path 7");
+	syslog(LOG_CRIT, "rerate_file_device_path 7");
 	saved_errno = errno;
 	if (child_devpath)
 		free(child_devpath);
@@ -466,12 +466,12 @@ make_ipv4_path(uint8_t *buf, ssize_t size,
 #endif
 	ret = efidp_make_ipv4(buf, size, 0, 0, 0, 0, 0, 0, 0, 0);
 	if (ret < 0)
-		syslog(LOG_CRIT,"could not make ipv4 DP node");
+		syslog(LOG_CRIT,"efivar, creator.c: could not make ipv4 DP node");
 	return ret;
 }
 
 ssize_t NONNULL(3, 4, 5, 6, 7) PUBLIC
-efi_generate_ipv4_device_path(uint8_t *buf, ssize_t size,
+rerate_ipv4_device_path(uint8_t *buf, ssize_t size,
 			      const char * const ifname,
 			      const char * const local_addr,
 			      const char * const remote_addr,
@@ -487,7 +487,7 @@ efi_generate_ipv4_device_path(uint8_t *buf, ssize_t size,
 
 	sz = make_mac_path(buf, size, ifname);
 	if (sz < 0) {
-		syslog(LOG_CRIT,"could not make MAC DP node");
+		syslog(LOG_CRIT,"efivar, creator.c: could not make MAC DP node");
 		return -1;
 	}
 	off += sz;
@@ -496,14 +496,14 @@ efi_generate_ipv4_device_path(uint8_t *buf, ssize_t size,
 			    gateway_addr, netmask, local_port, remote_port,
 			    protocol, addr_origin);
 	if (sz < 0) {
-		syslog(LOG_CRIT,"could not make IPV4 DP node");
+		syslog(LOG_CRIT,"efivar, creator.c: could not make IPV4 DP node");
 		return -1;
 	}
 	off += sz;
 
 	sz = efidp_make_end_entire(buf+off, size?size-off:0);
 	if (sz < 0) {
-		syslog(LOG_CRIT,"could not make EndEntire DP node");
+		syslog(LOG_CRIT,"efivar, creator.c: could not make EndEntire DP node");
 		return -1;
 	}
 	off += sz;

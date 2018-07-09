@@ -56,7 +56,7 @@ is_mbr_valid(legacy_mbr *mbr)
 	ret = (mbr->signature == MSDOS_MBR_SIGNATURE);
 	if (!ret) {
 		errno = ENOTTY;
-		syslog(LOG_CRIT,"mbr signature is not MSDOS_MBR_SIGNATURE");
+		syslog(LOG_CRIT,"efivar, disk.c: mbr signature is not MSDOS_MBR_SIGNATURE");
 	}
 	return ret;
 }
@@ -82,7 +82,7 @@ msdos_disk_get_extended_partition_info (int fd UNUSED,
         /* Until I can handle these... */
         //fprintf(stderr, "Extended partition info not supported.\n");
 	errno = ENOSYS;
-	syslog(LOG_CRIT,"extended partition info is not supported");
+	syslog(LOG_CRIT,"efivar, disk.c: extended partition info is not supported");
         return -1;
 }
 
@@ -111,12 +111,12 @@ msdos_disk_get_partition_info (int fd, int write_signature,
 
 	if (!mbr) {
 		errno = EINVAL;
-		syslog(LOG_CRIT,"mbr argument must not be NULL");
+		syslog(LOG_CRIT,"efivar, disk.c: mbr argument must not be NULL");
 		return -1;
 	}
 	if (!is_mbr_valid(mbr)) {
 		errno = ENOENT;
-		syslog(LOG_CRIT,"mbr is not valid");
+		syslog(LOG_CRIT,"efivar, disk.c: mbr is not valid");
 		return -1;
 	}
 
@@ -124,7 +124,7 @@ msdos_disk_get_partition_info (int fd, int write_signature,
 	*signature_type = 0x01;
 
 	if (!mbr->unique_mbr_signature && !write_signature) {
-		syslog(LOG_CRIT,"\n******************************************************\n"
+		syslog(LOG_CRIT,"efivar, disk.c: \n******************************************************\n"
 			  "Warning! This MBR disk does not have a unique signature.\n"
 			  "If this is not the first disk found by EFI, you may not be able\n"
 			  "to boot from it without a unique signature.\n"
@@ -137,13 +137,13 @@ msdos_disk_get_partition_info (int fd, int write_signature,
 		   to find the right disk to boot from */
 		rc = fstat(fd, &stat);
 		if (rc < 0) {
-			syslog(LOG_CRIT,"could not fstat disk");
+			syslog(LOG_CRIT,"efivar, disk.c: could not fstat disk");
 			return rc;
 		}
 
 		rc = gettimeofday(&tv, NULL);
 		if (rc < 0) {
-			syslog(LOG_CRIT,"gettimeofday failed");
+			syslog(LOG_CRIT,"efivar, disk.c: gettimeofday failed");
 			return rc;
 		}
 
@@ -156,7 +156,7 @@ msdos_disk_get_partition_info (int fd, int write_signature,
 		lseek(fd, 0, SEEK_SET);
 		rc = write(fd, mbr, sizeof(*mbr));
 		if (rc < 0) {
-			syslog(LOG_CRIT,"could not write MBR signature");
+			syslog(LOG_CRIT,"efivar, disk.c: could not write MBR signature");
 			return rc;
 		}
 	}
@@ -167,7 +167,7 @@ msdos_disk_get_partition_info (int fd, int write_signature,
                 rc = msdos_disk_get_extended_partition_info(fd, mbr, num,
 							    start, size);
 		if (rc < 0) {
-			syslog(LOG_CRIT,"could not get extended partition info");
+			syslog(LOG_CRIT,"efivar, disk.c: could not get extended partition info");
 			return rc;
 		}
         } else if (num == 0) {
@@ -200,7 +200,7 @@ get_partition_info(int fd, uint32_t options,
 
 	mbr_size = lcm(sizeof(*mbr), sector_size);
 	if ((rc = posix_memalign(&mbr_sector, sector_size, mbr_size)) != 0) {
-		syslog(LOG_CRIT,"posix_memalign failed");
+		syslog(LOG_CRIT,"efivar, disk.c: posix_memalign failed");
 		goto error;
 	}
 	memset(mbr_sector, '\0', mbr_size);
@@ -208,7 +208,7 @@ get_partition_info(int fd, uint32_t options,
 	offset = lseek(fd, 0, SEEK_SET);
 	this_bytes_read = read(fd, mbr_sector, mbr_size);
 	if (this_bytes_read < (ssize_t)sizeof(*mbr)) {
-		syslog(LOG_CRIT,"short read trying to read mbr data");
+		syslog(LOG_CRIT,"efivar, disk.c: short read trying to read mbr data");
 		rc = -1;
 		goto error_free_mbr;
 	}
@@ -229,7 +229,7 @@ get_partition_info(int fd, uint32_t options,
 							    mbr_type,
 							    signature_type);
 		if (mbr_invalid < 0) {
-			syslog(LOG_CRIT,"neither MBR nor GPT is valid");
+			syslog(LOG_CRIT,"efivar, disk.c: neither MBR nor GPT is valid");
 			rc = -1;
 			goto error_free_mbr;
 		}
@@ -275,7 +275,7 @@ make_hd_dn(uint8_t *buf, ssize_t size, int fd, int32_t partition,
 				&part_size, signature, &format,
 				&signature_type);
 	if (rc < 0) {
-		syslog(LOG_CRIT,"could not get partition info");
+		syslog(LOG_CRIT,"efivar, disk.c: could not get partition info");
 
 		return rc;
 	}
@@ -283,7 +283,7 @@ make_hd_dn(uint8_t *buf, ssize_t size, int fd, int32_t partition,
 	rc = efidp_make_hd(buf, size, partition, part_start, part_size,
 			   signature, format, signature_type);
 	if (rc < 0)
-		syslog(LOG_CRIT,"could not make HD DP node");
+		syslog(LOG_CRIT,"efivar, disk.c: could not make HD DP node");
 	return rc;
 }
 
@@ -304,19 +304,19 @@ make_hd_dn_udev(uint8_t *buf, ssize_t size, const char *devpath, int32_t partiti
 	if (partition <= 0)
 		return 0;
 		
-	syslog(LOG_CRIT,"make_hd_dn_udev");
+	syslog(LOG_CRIT,"efivar, disk.c: make_hd_dn_udev");
 
 	rc = gpt_disk_get_partition_info_udev(devpath, partition, &part_start,
 				&part_size, signature, &format,
 				&signature_type,0,0);
 	if (rc < 0) {
-		syslog(LOG_CRIT,"could not get partition info");
+		syslog(LOG_CRIT,"efivar, disk.c: could not get partition info");
 		return rc;
 	}
 
 	rc = efidp_make_hd(buf, size, partition, part_start, part_size,
 			   signature, format, signature_type);
 	if (rc < 0)
-		syslog(LOG_CRIT,"could not make HD DP node");
+		syslog(LOG_CRIT,"efivar, disk.c: could not make HD DP node");
 	return rc;
 }
