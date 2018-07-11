@@ -43,6 +43,8 @@
 #define BLKGETLASTSECT _IO(0x12,108) /* get last sector of block device */
 #endif
 
+#include <syslog.h>
+
 #ifndef major
 #include <sys/sysmacros.h>
 #endif
@@ -788,21 +790,31 @@ gpt_disk_get_partition_info_udev(const char *devpath, uint32_t num, uint64_t * s
         char buf[MAXC];
         char buf_value[MAXC];
         struct stat buf_stat = { 0, };
+        
+        syslog(LOG_CRIT,"efivar, gpt.c: gpt_disk_get_partition_info_udev: 0");
 
-        if (!stat(devpath, &buf_stat))
+        if (!stat(devpath, &buf_stat)) {
+        	syslog(LOG_CRIT,"efivar, gpt.c: gpt_disk_get_partition_info_udev: 1");
                 return -1;
+	}
         if (!S_ISBLK(buf_stat.st_mode)) {
+        	syslog(LOG_CRIT,"efivar, gpt.c: gpt_disk_get_partition_info_udev: 2");
                 errno = EINVAL;
                 return -1;
         }
+        
+        syslog(LOG_CRIT,"efivar, gpt.c: gpt_disk_get_partition_info_udev: 3");
+
         snprintf(buf,MAXC,"/run/udev/data/b%d:%d",major(buf_stat.st_rdev),minor(buf_stat.st_rdev));
 
         fp = fopen(buf,"r");
         if (NULL == fp) {
+        	syslog(LOG_CRIT,"efivar, gpt.c: gpt_disk_get_partition_info_udev: 4");
                 return -1;
         }
         while (fgets(buf,MAXC,fp)) {
                 if (strstr(buf,"ID_PART_ENTRY_UUID")) {
+                	syslog(LOG_CRIT,"efivar, gpt.c: gpt_disk_get_partition_info_udev: 5");
                         snprintf(buf_value, guid_len, "%s", strchr(buf,'=')+1);
                         
                         if (sscanf(buf_value, "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx",
@@ -811,19 +823,23 @@ gpt_disk_get_partition_info_udev(const char *devpath, uint32_t num, uint64_t * s
 			&signature[8], &signature[9], &signature[10], &signature[11],
 			&signature[12], &signature[13], &signature[14], &signature[15]) != 16) {
 				fclose(fp);
+				syslog(LOG_CRIT,"efivar, gpt.c: gpt_disk_get_partition_info_udev: error: 5.1");
                         	return -1;
 			}
                 }
                 if (strstr(buf,"ID_PART_ENTRY_OFFSET")) {
                         snprintf(buf_value,MAXC,"%s",strchr(buf,'=')+1);
                         *start = atoi(buf_value);
+                        syslog(LOG_CRIT,"efivar, gpt.c: gpt_disk_get_partition_info_udev: 6");
                 }
                 if (strstr(buf,"ID_PART_ENTRY_SIZE")) {
                         snprintf(buf_value,MAXC,"%s",strchr(buf,'=')+1);
                         *size = atoi(buf_value);
+                         syslog(LOG_CRIT,"efivar, gpt.c: gpt_disk_get_partition_info_udev: 7");
                 }
         }
         fclose(fp);
+        syslog(LOG_CRIT,"efivar, gpt.c: gpt_disk_get_partition_info_udev: 8");
 	return 0;
 }
 
