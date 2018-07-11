@@ -288,7 +288,7 @@ make_hd_dn(uint8_t *buf, ssize_t size, int fd, int32_t partition,
 }
 
 ssize_t HIDDEN
-make_hd_dn_udev(uint8_t *buf, ssize_t size, const char *devpath, int32_t partition,
+make_hd_dn_udev_gpt(uint8_t *buf, ssize_t size, const char *devpath, int32_t partition,
            uint32_t options)
 {
 	uint64_t part_start=0, part_size = 0;
