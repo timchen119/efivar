@@ -416,7 +416,7 @@ efi_generate_file_device_path(uint8_t *buf, ssize_t size,
 							relpath, options, ap);
 	syslog(LOG_CRIT, "rerate_file_device_path 4");
 	}
-	else if (!strcmp(relpath, "/boot/efi")){
+	else if (!strncmp(relpath, "/EFI/ubuntu/",12)){
 		ret = efi_va_generate_file_device_path_from_esp(buf, size,
 							child_devpath, rc,
 							relpath, options, ap);
