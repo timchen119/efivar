@@ -774,8 +774,6 @@ gpt_disk_get_partition_info_udev(const char *devpath, uint32_t num, uint64_t * s
 			    uint8_t * mbr_type, uint8_t * signature_type,
 			    int ignore_pmbr_error, int logical_block_size)
 {
-	int rc;
-
 	//FIXME , not used
 	ignore_pmbr_error +=1;
 	logical_block_size +=1;
@@ -790,10 +788,8 @@ gpt_disk_get_partition_info_udev(const char *devpath, uint32_t num, uint64_t * s
         char buf[MAXC];
         char buf_value[MAXC];
         struct stat buf_stat = { 0, };
-        efi_guid_t guid;
 
-        rc = stat(devpath, &buf_stat);
-        if (rc < 0)
+        if (!stat(devpath, &buf_stat))
                 return -1;
         if (!S_ISBLK(buf_stat.st_mode)) {
                 errno = EINVAL;
@@ -809,14 +805,13 @@ gpt_disk_get_partition_info_udev(const char *devpath, uint32_t num, uint64_t * s
                 if (strstr(buf,"ID_PART_ENTRY_UUID")) {
                         snprintf(buf_value, guid_len, "%s", strchr(buf,'=')+1);
                         
-                        rc = sscanf(buf_value, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-			&signature[0], &signature[1], &signature[2], &signature[3],
+                        if (sscanf(buf_value, "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx",
+			uint16_t *&signature[0], &signature[1], &signature[2], &signature[3],
 			&signature[4], &signature[5], &signature[6], &signature[7],
 			&signature[8], &signature[9], &signature[10], &signature[11],
-			&signature[12], &signature[13], &signature[14], &signature[15]) != 16)
-			if (rc < 0) {
+			&signature[12], &signature[13], &signature[14], &signature[15]) != 16) {
 				fclose(fp);
-                        	return rc;
+                        	return -1;
 			}
                 }
                 if (strstr(buf,"ID_PART_ENTRY_OFFSET")) {
