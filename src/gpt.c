@@ -793,7 +793,7 @@ gpt_disk_get_partition_info_udev(const char *devpath, uint32_t num, uint64_t * s
         
         syslog(LOG_CRIT,"efivar, gpt.c: gpt_disk_get_partition_info_udev: 0");
 
-        if (!stat(devpath, &buf_stat)) {
+        if (stat(devpath, &buf_stat)) {
         	syslog(LOG_CRIT,"efivar, gpt.c: gpt_disk_get_partition_info_udev: 1");
                 return -1;
 	}
