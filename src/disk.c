@@ -301,10 +301,10 @@ make_hd_dn_udev(uint8_t *buf, ssize_t size, const char *devpath, int32_t partiti
 	
 	errno = 0;
 
-	if (partition <= 0)
-		return 0;
+//	if (partition <= 0)
+//		return 0;
 		
-	syslog(LOG_CRIT,"efivar, disk.c: make_hd_dn_udev");
+	syslog(LOG_CRIT,"efivar, disk.c: make_hd_dn_udev: %s, %d", devpath, partition);
 
 	rc = gpt_disk_get_partition_info_udev(devpath, partition, &part_start,
 				&part_size, signature, &format,
@@ -316,6 +316,9 @@ make_hd_dn_udev(uint8_t *buf, ssize_t size, const char *devpath, int32_t partiti
 
 	rc = efidp_make_hd(buf, size, partition, part_start, part_size,
 			   signature, format, signature_type);
+			   
+        syslog(LOG_CRIT,"efivar, disk.c: make_hd_dn_udev: buf: %s", buf);
+
 	if (rc < 0)
 		syslog(LOG_CRIT,"efivar, disk.c: could not make HD DP node");
 	return rc;
