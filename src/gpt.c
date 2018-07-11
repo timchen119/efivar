@@ -817,11 +817,10 @@ gpt_disk_get_partition_info_udev(const char *devpath, uint32_t num, uint64_t * s
                 	syslog(LOG_CRIT,"efivar, gpt.c: gpt_disk_get_partition_info_udev: 5");
                         snprintf(buf_value, guid_len, "%s", strchr(buf,'=')+1);
                         
-                        if (sscanf(buf_value, "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx",
-			&signature[0], &signature[1], &signature[2], &signature[3],
-			&signature[4], &signature[5], &signature[6], &signature[7],
+                        if (sscanf(buf_value, "%08x-%04x-%04x-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx",
+                        (unsigned int *)&signature[0], (unsigned int *)&signature[4], (unsigned int *)&signature[6],
 			&signature[8], &signature[9], &signature[10], &signature[11],
-			&signature[12], &signature[13], &signature[14], &signature[15]) != 16) {
+			&signature[12], &signature[13], &signature[14], &signature[15]) != 11) {
 				fclose(fp);
 				syslog(LOG_CRIT,"efivar, gpt.c: gpt_disk_get_partition_info_udev: error: 5.1");
                         	return -1;
