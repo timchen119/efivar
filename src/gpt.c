@@ -806,7 +806,7 @@ gpt_disk_get_partition_info_udev(const char *devpath, uint32_t num, uint64_t * s
                         snprintf(buf_value, guid_len, "%s", strchr(buf,'=')+1);
                         
                         if (sscanf(buf_value, "%02hhx%02hhx%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx",
-			uint16_t *&signature[0], &signature[1], &signature[2], &signature[3],
+			&signature[0], &signature[1], &signature[2], &signature[3],
 			&signature[4], &signature[5], &signature[6], &signature[7],
 			&signature[8], &signature[9], &signature[10], &signature[11],
 			&signature[12], &signature[13], &signature[14], &signature[15]) != 16) {
