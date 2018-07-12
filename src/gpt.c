@@ -771,15 +771,14 @@ gpt_disk_get_partition_info(int fd, uint32_t num, uint64_t * start,
 }
 
 int NONNULL(3, 4, 5, 6, 7) HIDDEN
-gpt_disk_get_partition_info_udev(const char *devpath, uint32_t num, uint64_t * start,
-			    uint64_t * size, uint8_t *signature,
+gpt_disk_get_partition_info_udev(const char *devpath, uint32_t * num, uint64_t * start,
+			    uint64_t * size, uint8_t * signature,
 			    uint8_t * mbr_type, uint8_t * signature_type,
 			    int ignore_pmbr_error, int logical_block_size)
 {
 	//FIXME , not used
 	ignore_pmbr_error +=1;
 	logical_block_size +=1;
-	num +=1;
 
 	*mbr_type = 0x02;
 	*signature_type = 0x02;
@@ -835,6 +834,11 @@ gpt_disk_get_partition_info_udev(const char *devpath, uint32_t num, uint64_t * s
                         snprintf(buf_value,MAXC,"%s",strchr(buf,'=')+1);
                         *size = atoi(buf_value);
                          syslog(LOG_CRIT,"efivar, gpt.c: gpt_disk_get_partition_info_udev: 7");
+                }
+                if (strstr(buf,"ID_PART_ENTRY_NUMBER")) {
+                        snprintf(buf_value,MAXC,"%s",strchr(buf,'=')+1);
+                        *num = atoi(buf_value);
+                        syslog(LOG_CRIT,"efivar, gpt.c: gpt_disk_get_partition_info_udev: 8 , num: %d", *num);
                 }
         }
         fclose(fp);
